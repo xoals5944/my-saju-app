@@ -18,7 +18,7 @@ class SajuRequest(BaseModel):
     birth_date: str
     birth_time: str
     gender: str
-
+    saju_type: str = "total" # 추가된 부분 (기본값:total)
 
 # 웹사이트 메인 화면 접속 시 static/index.html 열기
 @app.get("/", response_class=HTMLResponse)
@@ -29,26 +29,32 @@ def read_root():
 
 # 사주 분석 API
 @app.post("/api/saju")
-def get_saju(data: SajuRequest):
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise HTTPException(
-            status_code=500, detail="API 키가 설정되지 않았습니다."
-        )
+async def get_saju(req: SajuRequest):
+    # 1. 탭 선택에 따른 강조 문구 설정
+    if req.saju_type == "love":
+        type_instruction = "다른 내용은 제외하고 '연애운, 이성운, 애정 흐름, 연애 성향'을 집중적으로 매우 상세히 풀이해줘."
+    elif req.saju_type == "wealth":
+        type_instruction = "다른 내용은 제외하고 '금전운, 재물운, 돈 버는 법, 재산 관리'를 집중적으로 매우 상세히 풀이해줘."
+    else:
+        type_instruction = "전반적인 성격, 타고난 운, 연애, 금전 등을 종합적으로 풀이해줘."
 
-    # 오늘 날짜 구하기
-    today_str = datetime.now().strftime("%Y년 %m월 %d일")
-
-    # 기존 프롬프트
+    # 2. AI에게 전달할 프롬프트 구성
     prompt = f"""
-    당신은 복잡하고 어려운 사주 용어를 세상에서 가장 쉽고 재미있게 설명해 주는 태민사주 입니다.
-    다음 사용자 정보를 바탕으로 사주를 분석해 주세요.
+    당신은 전문 사주 명리학자입니다.
+    다음 요청자의 정보를 바탕으로 사주를 풀이해 주세요.
 
-    [오늘 날짜 기준: {today_str}]
-    - 이름: {data.user_name}
-    - 생년월일: {data.birth_date}
-    - 태어난 시간: {data.birth_time}
-    - 성별: {data.gender}
+    [요청자 정보]
+    - 이름: {req.user_name}
+    - 생년월일: {req.birth_date}
+    - 태어난 시간: {req.birth_time}
+    - 성별: {req.gender}
+
+    [풀이 지침]
+    {type_instruction}
+    """
+
+    # 3. AI 모델 호출 로직 (기존 코드의 response = model.generate_content(prompt) 부분)
+    # ...
 
     [작성 가이드라인 - 필수]
     1. **[이름 반영]** 모든 항목의 답변과 설명에서 사용자 이름인 '{data.user_name}님'을 자연스럽고 친근하게 자주 지칭해 주세요.
