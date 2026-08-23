@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 AI 태민사주</title>
+    <style>
+        body { font-family: 'Pretendard', -apple-system, sans-serif; background: #f4f6f9; padding: 20px; display: flex; justify-content: center; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.08); box-sizing: border-box; }
+        h1 { font-size: 24px; color: #333; text-align: center; margin-bottom: 20px; }
+        label { font-size: 14px; color: #666; font-weight: bold; display: block; margin-top: 12px; }
+        input, select, button { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 15px; }
+        button { background: #6c5ce7; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 24px; font-size: 16px; transition: background 0.2s; }
+        button:hover { background: #5a4bcf; }
+        #result { margin-top: 25px; white-space: pre-wrap; line-height: 1.7; background: #fafafa; padding: 18px; border-radius: 10px; border: 1px solid #eee; font-size: 15px; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🔮 AI 태민사주</h1>
+        
+        <label>이름(또는 닉네임)</label>
+        <input type="text" id="userName" placeholder="예: 홍길동">
+        
+        <label>생년월일</label>
+        <input type="text" id="birthDate" placeholder="예: 19960515 또는 1996-05-15">
+        
+        <label>태어난 시간</label>
+        <input type="text" id="birthTime" placeholder="예: 07:40 또는 모름">
+        
+        <label>성별</label>
+        <select id="gender">
+            <option value="남성">남성</option>
+            <option value="여성">여성</option>
+        </select>
+        
+        <button onclick="getSaju()">✨ 내 사주 보기</button>
+        
+        <div id="result">정보를 입력하고 버튼을 누르시면 사주 풀이가 나와요!</div>
+    </div>
+
+    <script>
+        async function getSaju() {
+            const userName = document.getElementById('userName').value;
+            const birthDate = document.getElementById('birthDate').value;
+            const birthTime = document.getElementById('birthTime').value;
+            const gender = document.getElementById('gender').value;
+
+            if (!userName) {
+                alert("이름을 입력해 주세요.");
+                return;
+            }
+            if (!birthDate) {
+                alert("생년월일을 입력해 주세요.");
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerText = "🔮 AI가 사주를 열심히 분석하고 있습니다... 잠시만 기다려주세요!";
+
+            const data = {
+                user_name: userName,
+                birth_date: birthDate,
+                birth_time: birthTime || "모름",
+                gender: gender
+            };
+
+            try {
+                const res = await fetch('/api/saju', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const resData = await res.json();
+                if (res.ok) {
+                    resultDiv.innerText = resData.result;
+                } else {
+                    resultDiv.innerText = "⚠️ " + resData.detail;
+                }
+            } catch (err) {
+                resultDiv.innerText = "⚠️ 서버 연결 중 오류가 발생했습니다. 터미널의 서버 상태를 확인해 주세요.";
+            }
+        }
+    </script>
+</body>
+</html>
