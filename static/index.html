@@ -15,9 +15,13 @@
         
         label { font-size: 14px; color: #666; font-weight: bold; display: block; margin-top: 12px; }
         input, select, button { width: 100%; padding: 12px; margin-top: 6px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 15px; }
-        /* 달력 선택창 스타일 최적화 */
         input[type="date"] { font-family: inherit; color: #333; background-color: #ffffff; cursor: pointer; }
         
+        /* 달력과 양력/음력을 한 줄로 나란히 배치하는 스타일 */
+        .birth-row { display: flex; gap: 8px; margin-top: 6px; }
+        .birth-row input[type="date"] { flex: 2; margin-top: 0; }
+        .birth-row select { flex: 1; margin-top: 0; cursor: pointer; }
+
         button.submit-btn { background: #6c5ce7; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 24px; font-size: 16px; transition: background 0.2s; }
         button.submit-btn:hover { background: #5a4bcf; }
         #result { margin-top: 25px; white-space: pre-wrap; line-height: 1.7; background: #fafafa; padding: 18px; border-radius: 10px; border: 1px solid #eee; font-size: 15px; color: #333; }
@@ -36,9 +40,16 @@
         <label>이름(또는 닉네임)</label>
         <input type="text" id="userName" placeholder="예: 홍길동">
         
-        <label>생년월일 (달력 선택)</label>
-        <input type="date" id="birthDate">
-        
+        <label>생년월일 및 구별</label>
+        <!-- 달력창과 양/음력 선택창을 한 줄(Row)로 배치 -->
+        <div class="birth-row">
+            <input type="date" id="birthDate">
+            <select id="calendarType">
+                <option value="양력">☀️ 양력</option>
+                <option value="음력">🌙 음력</option>
+            </select>
+        </div>
+
         <label>태어난 시간</label>
         <input type="text" id="birthTime" placeholder="예: 07:40 또는 모름">
         
@@ -83,9 +94,10 @@
             const birthDate = document.getElementById('birthDate').value;
             const birthTime = document.getElementById('birthTime').value;
             const gender = document.getElementById('gender').value;
+            const calendarType = document.getElementById('calendarType').value;
 
             if (!userName) { alert("이름을 입력해 주세요."); return; }
-            if (!birthDate) { alert("생년월일을 달력에서 선택해 주세요."); return; }
+            if (!birthDate) { alert("생년월일을 선택해 주세요."); return; }
 
             const resultDiv = document.getElementById('result');
             resultDiv.innerText = "🔮 AI가 선택하신 운세를 열심히 분석하고 있습니다... 잠시만 기다려주세요!";
@@ -93,6 +105,7 @@
             const data = {
                 user_name: userName,
                 birth_date: birthDate,
+                calendar_type: calendarType,
                 birth_time: birthTime || "모름",
                 gender: gender,
                 saju_type: currentTab
