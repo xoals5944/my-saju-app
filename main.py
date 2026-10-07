@@ -62,8 +62,9 @@ async def get_saju(req: SajuRequest):
     max_retries = 3
     for attempt in range(max_retries):
         try:
+            # ⭐ 최신 모델명 gemini-3.8-flash 로 변경
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3.8-flash",
                 contents=prompt
             )
             return {"result": response.text}
