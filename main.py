@@ -1,9 +1,15 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import google.generativeai as genai
+from google import genai
 
 app = FastAPI()
 
+# static 폴더 연결
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 1. 요청 데이터 구조 정의 (saju_type 추가)
 class SajuRequest(BaseModel):
     user_name: str
     birth_date: str
@@ -11,40 +17,27 @@ class SajuRequest(BaseModel):
     gender: str
     saju_type: str = "total"
 
+@app.get("/")
+async def read_index():
+    from fastapi.responses import FileResponse
+    return FileResponse('static/index.html')
+
 @app.post("/api/saju")
 async def get_saju(req: SajuRequest):
-    # 탭별 프롬프트 및 지시사항 분기
+    # 2. 탭별 프롬프트 분기 설정
     if req.saju_type == "love":
         type_title = "❤️ 연애운 전용 풀이"
-        type_instruction = """
-        오직 '연애운' 및 '애정 흐름'에 대해서만 집중적으로 풀이해 주세요.
-        - 타고난 연애 성향 및 매력 포인트
-        - 현재~앞으로의 연애운 흐름 및 좋은 인연을 만날 시기
-        - 연애 시주의해야 할 점 및 조언
-        (금전운이나 다른 운세 이야기는 제외하고 연애운만 다뤄주세요)
-        """
+        type_instruction = "오직 '연애운' 및 '애정 흐름'에 대해서만 집중적으로 풀이해 주세요."
     elif req.saju_type == "wealth":
         type_title = "💰 금전운 전용 풀이"
-        type_instruction = """
-        오직 '금전운' 및 '재물 흐름'에 대해서만 집중적으로 풀이해 주세요.
-        - 타고난 재물복 및 금전 성향
-        - 재물이 모이는 시기와 주의해야 할 지출/손실 시기
-        - 재물운을 높이기 위한 실천 팁 및 조언
-        (연애운이나 다른 운세 이야기는 제외하고 금전운만 다뤄주세요)
-        """
-    else:  # total
+        type_instruction = "오직 '금전운' 및 '재물 흐름'에 대해서만 집중적으로 풀이해 주세요."
+    else:
         type_title = "🔮 전체 종합 사주 (오늘/이달/올해/전반적 운세)"
-        type_instruction = """
-        다음 항목들을 순서대로 깔끔하게 나누어 풀이해 주세요.
-        1. 🌟 타고난 전반적 총운 및 성격
-        2. 📅 오늘의 운세
-        3. 🗓️ 이달의 운세
-        4. 🐉 올해(2026년) 전체 운세
-        """
+        type_instruction = "1. 전반적 총운, 2. 오늘의 운세, 3. 이달의 운세, 4. 올해 전체 운세 순서로 나누어 풀이해 주세요."
 
+    # 3. AI 프롬프트 작성
     prompt = f"""
-    당신은 친절하고 용한 사주 명리학자입니다.
-    요청자의 사주 정보를 바탕으로 [{type_title}]를 풀어주세요.
+    당신은 친절한 사주 명리학자입니다. 요청자의 사주 정보를 바탕으로 [{type_title}]를 풀어주세요.
 
     [요청자 정보]
     - 이름: {req.user_name}
@@ -56,17 +49,19 @@ async def get_saju(req: SajuRequest):
     {type_instruction}
 
     [출력 규칙]
-    1. ** 별표, # 샵 등 마크다운 특수문자를 절대 쓰지 마세요.
-    2. 딱딱한 말투 대신, 실제 상담하듯 자연스럽고 친근한 존댓말(~해요, ~랍니다, ~입니다)을 쓰세요.
-    3. 구분을 위해 보기 좋은 이모지(✨, 🔮, 💡, 📌 등)를 사용하세요.
+    1. **, # 등 마크다운 특수문자를 절대 사용하지 마세요.
+    2. 자연스럽고 친근한 존댓말(~해요, ~랍니다)을 사용하세요.
     """
 
-    # Gemini 모델 호출 (기존 코드 사용)
+    api_key = os.getenv("GEMINI_API_KEY")
+
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
+        )
         return {"result": response.text}
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=500,
             detail="현재 접속자가 많아 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.",
