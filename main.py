@@ -72,7 +72,7 @@ async def get_saju(req: SajuRequest):
             print(f"❌ API 오류 발생 (시도 {attempt+1}/{max_retries}): {e}")
             traceback.print_exc()
             if attempt < max_retries - 1:
-                time.sleep(2)
+                time.sleep(4)
                 continue
             else:
                 raise HTTPException(
