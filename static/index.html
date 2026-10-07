@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -9,7 +9,6 @@
         .card { background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.08); box-sizing: border-box; }
         h1 { font-size: 24px; color: #333; text-align: center; margin-bottom: 20px; }
         
-        /* 탭 스타일 */
         .tab-container { display: flex; gap: 8px; margin-bottom: 20px; background: #eee; padding: 4px; border-radius: 10px; }
         .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; font-size: 14px; font-weight: bold; color: #666; border-radius: 8px; cursor: pointer; margin-top: 0; transition: all 0.2s; }
         .tab-btn.active { background: white; color: #6c5ce7; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
@@ -25,7 +24,6 @@
     <div class="card">
         <h1>🔮 AI 태민사주</h1>
         
-        <!-- 탭 메뉴 영역 -->
         <div class="tab-container">
             <button class="tab-btn active" onclick="selectTab('total', this)">🔮 전체 사주</button>
             <button class="tab-btn" onclick="selectTab('love', this)">❤️ 연애운</button>
@@ -36,7 +34,7 @@
         <input type="text" id="userName" placeholder="예: 홍길동">
         
         <label>생년월일</label>
-        <input type="text" id="birthDate" placeholder="예: 19960515 또는 1996-05-15">
+        <input type="date" id="birthDate" placeholder="예: 1996-05-15">
         
         <label>태어난 시간</label>
         <input type="text" id="birthTime" placeholder="예: 07:40 또는 모름">
@@ -47,22 +45,34 @@
             <option value="여성">여성</option>
         </select>
         
-        <button class="submit-btn" onclick="getSaju()">✨ 내 사주 보기</button>
+        <button class="submit-btn" id="submitBtn" onclick="getSaju()">✨ 전체 사주 보기</button>
         
-        <div id="result">정보를 입력하고 버튼을 누르시면 사주 풀이가 나와요!</div>
+        <div id="result">정보를 입력하고 버튼을 누르시면 선택하신 운세 풀이가 나와요!</div>
     </div>
 
     <script>
-        let currentTab = 'total'; // 기본 탭: 전체 사주
+        let currentTab = 'total';
 
-        // 탭 선택 함수
         function selectTab(tabType, element) {
             currentTab = tabType;
             
-            // 모든 탭 버튼의 active 클래스 제거 후 선택한 버튼에만 추가
             const buttons = document.querySelectorAll('.tab-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
+
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+
+            if (tabType === 'love') {
+                submitBtn.innerText = "❤️ 연애운 보기";
+                resultDiv.innerText = "정보 입력 후 [❤️ 연애운 보기] 버튼을 누르면 연애운 결과가 출력됩니다.";
+            } else if (tabType === 'wealth') {
+                submitBtn.innerText = "💰 금전운 보기";
+                resultDiv.innerText = "정보 입력 후 [💰 금전운 보기] 버튼을 누르면 금전운 결과가 출력됩니다.";
+            } else {
+                submitBtn.innerText = "✨ 전체 사주 보기";
+                resultDiv.innerText = "정보 입력 후 [✨ 전체 사주 보기] 버튼을 누르면 오늘/이달/올해/전체 운세가 출력됩니다.";
+            }
         }
 
         async function getSaju() {
@@ -71,24 +81,18 @@
             const birthTime = document.getElementById('birthTime').value;
             const gender = document.getElementById('gender').value;
 
-            if (!userName) {
-                alert("이름을 입력해 주세요.");
-                return;
-            }
-            if (!birthDate) {
-                alert("생년월일을 입력해 주세요.");
-                return;
-            }
+            if (!userName) { alert("이름을 입력해 주세요."); return; }
+            if (!birthDate) { alert("생년월일을 입력해 주세요."); return; }
 
             const resultDiv = document.getElementById('result');
-            resultDiv.innerText = "🔮 AI가 사주를 열심히 분석하고 있습니다... 잠시만 기다려주세요!";
+            resultDiv.innerText = "🔮 AI가 선택하신 운세를 열심히 분석하고 있습니다... 잠시만 기다려주세요!";
 
             const data = {
                 user_name: userName,
                 birth_date: birthDate,
                 birth_time: birthTime || "모름",
                 gender: gender,
-                saju_type: currentTab // 현재 선택된 탭 정보(total, love, wealth) 전달
+                saju_type: currentTab
             };
 
             try {
@@ -104,7 +108,7 @@
                     resultDiv.innerText = "⚠️ " + resData.detail;
                 }
             } catch (err) {
-                resultDiv.innerText = "⚠️ 서버 연결 중 오류가 발생했습니다. 터미널의 서버 상태를 확인해 주세요.";
+                resultDiv.innerText = "⚠️ 서버 연결 중 오류가 발생했습니다. 터미널 및 서버 상태를 확인해 주세요.";
             }
         }
     </script>
