@@ -6,13 +6,12 @@ from google import genai
 
 app = FastAPI()
 
-# static 폴더 연결
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 1. 요청 데이터 구조 정의 (saju_type 추가)
 class SajuRequest(BaseModel):
     user_name: str
     birth_date: str
+    calendar_type: str = "양력"  # 양력/음력 구분 추가
     birth_time: str
     gender: str
     saju_type: str = "total"
@@ -24,7 +23,6 @@ async def read_index():
 
 @app.post("/api/saju")
 async def get_saju(req: SajuRequest):
-    # 2. 탭별 프롬프트 분기 설정
     if req.saju_type == "love":
         type_title = "❤️ 연애운 전용 풀이"
         type_instruction = "오직 '연애운' 및 '애정 흐름'에 대해서만 집중적으로 풀이해 주세요."
@@ -35,13 +33,12 @@ async def get_saju(req: SajuRequest):
         type_title = "🔮 전체 종합 사주 (오늘/이달/올해/전반적 운세)"
         type_instruction = "1. 전반적 총운, 2. 오늘의 운세, 3. 이달의 운세, 4. 올해 전체 운세 순서로 나누어 풀이해 주세요."
 
-    # 3. AI 프롬프트 작성
     prompt = f"""
     당신은 친절한 사주 명리학자입니다. 요청자의 사주 정보를 바탕으로 [{type_title}]를 풀어주세요.
 
     [요청자 정보]
     - 이름: {req.user_name}
-    - 생년월일: {req.birth_date}
+    - 생년월일: {req.birth_date} ({req.calendar_type})
     - 태어난 시간: {req.birth_time}
     - 성별: {req.gender}
 
@@ -61,7 +58,7 @@ async def get_saju(req: SajuRequest):
             model="gemini-2.5-flash", contents=prompt
         )
         return {"result": response.text}
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=500,
             detail="현재 접속자가 많아 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.",
